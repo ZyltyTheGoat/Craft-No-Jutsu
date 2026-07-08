@@ -1,0 +1,12 @@
+{
+  "_fv": 79,
+  "_type": "keybind",
+  "definition": {
+    "triggerKey": "G",
+    "keyBindingName": "Dash",
+    "keyBindingCategoryKey": "craft_no_jutsu",
+    "onKeyPressed": {
+      "name": "Dash"
+    }
+  }
+}

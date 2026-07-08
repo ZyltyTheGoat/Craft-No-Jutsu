@@ -1,0 +1,22 @@
+{
+  "poof": {
+    "sounds": [
+      {
+        "name": "naruto:poof",
+        "stream": false
+      }
+    ]
+  },
+  "electric_spark": {
+    "sounds": [
+      {
+        "name": "naruto:electric_spark2",
+        "stream": false
+      },
+      {
+        "name": "naruto:electric_spark1",
+        "stream": false
+      }
+    ]
+  }
+}

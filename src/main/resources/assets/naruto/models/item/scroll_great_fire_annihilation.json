@@ -1,0 +1,7 @@
+{
+  "parent": "naruto:custom/scroll",
+  "textures": {
+    "0": "naruto:block/scroll_b",
+    "particle": "naruto:item/scroll_b"
+  }
+}

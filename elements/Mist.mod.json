@@ -1,0 +1,24 @@
+{
+  "_fv": 79,
+  "_type": "particle",
+  "definition": {
+    "texture": "particle_mist",
+    "animate": true,
+    "frameDuration": 3,
+    "width": 2.0,
+    "height": 2.0,
+    "scale": {
+      "fixedValue": 25.0
+    },
+    "speedFactor": 1.0,
+    "gravity": 0.0,
+    "maxAge": 23,
+    "maxAgeDiff": 0,
+    "angularVelocity": 0.0,
+    "angularAcceleration": 0.0,
+    "canCollide": false,
+    "alwaysShow": true,
+    "emissiveRendering": false,
+    "renderType": "TRANSLUCENT"
+  }
+}

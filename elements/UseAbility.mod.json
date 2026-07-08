@@ -1,0 +1,15 @@
+{
+  "_fv": 79,
+  "_type": "keybind",
+  "definition": {
+    "triggerKey": "Z",
+    "keyBindingName": "Use Ability",
+    "keyBindingCategoryKey": "craft_no_jutsu",
+    "onKeyPressed": {
+      "name": "UseAbilityOnKeyPressed"
+    },
+    "onKeyReleased": {
+      "name": "UseAbilityOnKeyReleased"
+    }
+  }
+}

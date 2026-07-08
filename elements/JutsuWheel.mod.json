@@ -1,0 +1,12 @@
+{
+  "_fv": 79,
+  "_type": "keybind",
+  "definition": {
+    "triggerKey": "C",
+    "keyBindingName": "Jutsu Wheel",
+    "keyBindingCategoryKey": "craft_no_jutsu",
+    "onKeyPressed": {
+      "name": "JutsuWheelOnKeyPressed"
+    }
+  }
+}
