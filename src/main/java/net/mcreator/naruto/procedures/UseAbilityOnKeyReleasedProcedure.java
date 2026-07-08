@@ -38,6 +38,9 @@ public class UseAbilityOnKeyReleasedProcedure {
 			if ("great_breakthrough".equals(activeJutsu) && GreatBreakthroughAbility.tryRelease(entity, jutsuData)) {
 				return;
 			}
+			if ("severing_wave".equals(activeJutsu) && SeveringWaveAbility.tryRelease(entity, jutsuData)) {
+				return;
+			}
 			if ("shadow_clone".equals(activeJutsu) && CloneJutsuAbility.tryUse(entity, jutsuData, CloneType.SHADOW, activeJutsu)) {
 				return;
 			}
