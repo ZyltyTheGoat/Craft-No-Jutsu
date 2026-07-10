@@ -9,6 +9,9 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.FriendlyByteBuf;
 
 import net.mcreator.naruto.NarutoMod;
+import net.mcreator.naruto.JutsuRegistry;
+import net.mcreator.naruto.JutsuData;
+import net.mcreator.naruto.DojutsuStateHelper;
 
 public record SetActiveJutsuPacket(String jutsuId) implements CustomPacketPayload {
 	public static final Type<SetActiveJutsuPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(NarutoMod.MODID, "set_active_jutsu"));
@@ -30,6 +33,12 @@ public record SetActiveJutsuPacket(String jutsuId) implements CustomPacketPayloa
 					playerVars.chargeTime = 0;
 				}
 				playerVars.activeJutsu = packet.jutsuId;
+				JutsuRegistry.initializeJutsus();
+				JutsuData jutsuData = JutsuRegistry.getJutsu(packet.jutsuId);
+				if (DojutsuStateHelper.isDojutsu(jutsuData)) {
+					playerVars.activeDojutsu = jutsuData.getNature();
+					playerVars.activeToggleJutsu = DojutsuStateHelper.ensureActive(playerVars.activeToggleJutsu, jutsuData.getNature());
+				}
 				// Sync to client (assumes your PlayerVariables has a sync method)
 				playerVars.markSyncDirty();
 			}

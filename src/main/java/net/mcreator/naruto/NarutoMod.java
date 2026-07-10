@@ -42,25 +42,55 @@ public class NarutoMod {
 
 	public NarutoMod(IEventBus modEventBus) {
 		// Start of user code block mod constructor
+		forceLoadNetworkMessages();
 		// End of user code block mod constructor
 		NeoForge.EVENT_BUS.register(this);
 		modEventBus.addListener(this::registerNetworking);
 		NarutoModSounds.REGISTRY.register(modEventBus);
-
 		NarutoModItems.REGISTRY.register(modEventBus);
 		NarutoModEntities.REGISTRY.register(modEventBus);
 		NarutoModTabs.REGISTRY.register(modEventBus);
 		NarutoModVariables.ATTACHMENT_TYPES.register(modEventBus);
-
 		NarutoModMobEffects.REGISTRY.register(modEventBus);
 		NarutoModMenus.REGISTRY.register(modEventBus);
 		NarutoModParticleTypes.REGISTRY.register(modEventBus);
-
 		// Start of user code block mod init
 		// End of user code block mod init
 	}
 
 	// Start of user code block mod methods
+	private static void forceLoadNetworkMessages() {
+		forceLoadNetworkMessage("net.mcreator.naruto.network.SetActiveDojutsuPacket");
+		forceLoadNetworkMessage("net.mcreator.naruto.network.JutsuLoadoutPacket");
+		forceLoadNetworkMessage("net.mcreator.naruto.network.MistFieldStatePacket");
+		forceLoadNetworkMessage("net.mcreator.naruto.network.AshFieldStatePacket");
+		forceLoadNetworkMessage("net.mcreator.naruto.network.JutsuCooldownSyncPacket");
+		forceLoadNetworkMessage("net.mcreator.naruto.network.FalseDarknessBeamPacket");
+		forceLoadNetworkMessage("net.mcreator.naruto.network.FireDragonBulletPacket");
+		forceLoadNetworkMessage("net.mcreator.naruto.network.WindBurstPacket");
+		forceLoadNetworkMessage("net.mcreator.naruto.network.BladeOfWindSlashPacket");
+		forceLoadNetworkMessage("net.mcreator.naruto.network.ChidoriBurstPacket");
+		forceLoadNetworkMessage("net.mcreator.naruto.network.ChidoriStatePacket");
+		forceLoadNetworkMessage("net.mcreator.naruto.network.LightningChakraModeStatePacket");
+		forceLoadNetworkMessage("net.mcreator.naruto.network.WaterPrisonStatePacket");
+		forceLoadNetworkMessage("net.mcreator.naruto.network.SandBindingCoffinStatePacket");
+		forceLoadNetworkMessage("net.mcreator.naruto.network.IronSandShowerPacket");
+		forceLoadNetworkMessage("net.mcreator.naruto.network.IronSandGatheringAssaultPacket");
+		forceLoadNetworkMessage("net.mcreator.naruto.network.NeedleSpherePacket");
+		forceLoadNetworkMessage("net.mcreator.naruto.network.UltimateProtectionPacket");
+		forceLoadNetworkMessage("net.mcreator.naruto.network.SolidFogJutsuPacket");
+		forceLoadNetworkMessage("net.mcreator.naruto.network.JutsuHudFeedbackPacket");
+		forceLoadNetworkMessage("net.mcreator.naruto.network.SeveringWaveBeamPacket");
+	}
+
+	private static void forceLoadNetworkMessage(String className) {
+		try {
+			Class.forName(className);
+		} catch (ClassNotFoundException exception) {
+			LOGGER.warn("Could not force-load Naruto network message class: {}", className);
+		}
+	}
+
 	// End of user code block mod methods
 	private static boolean networkingRegistered = false;
 	private static final Map<CustomPacketPayload.Type<?>, NetworkMessage<?>> MESSAGES = new HashMap<>();

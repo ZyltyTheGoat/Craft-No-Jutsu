@@ -57,7 +57,7 @@ public class JutsuRegistry {
 		// Lightning Release
 		registerJutsu("chidori", new JutsuData("Chidori", "NATURE", "LIGHTNING", 65, 100, 60, false, 0x96d3c62b));
 		registerJutsu("lightning_clone", new JutsuData("Lightning Clone", "NATURE", "LIGHTNING", 80, 0, 10, false, 0x96d3c62b));
-		registerJutsu("false_darkness", new JutsuData("False Darkness", "NATURE", "LIGHTNING", 45, 100, 60, false, 0x96d3c62b));
+		registerJutsu("false_darkness", new JutsuData("False Darkness", "NATURE", "LIGHTNING", 55, 55, 135, false, 0x96d3c62b));
 		registerJutsu("beast_tracking_fang", new JutsuData("Beast Tracking Fang", "NATURE", "LIGHTNING", 35, 50, 30, false, 0x96d3c62b));
 		registerJutsu("lightning_chakra_mode", new JutsuData("Lightning Chakra Mode", "NATURE", "LIGHTNING", 4, 0, 0, true, 0x96d3c62b));
 		registerJutsu("lighthing_chakra_mode", new JutsuData("Lightning Chakra Mode", "NATURE", "LIGHTNING", 4, 0, 0, true, 0x96d3c62b));
@@ -100,10 +100,11 @@ public class JutsuRegistry {
 		registerJutsu("white_whale", new JutsuData("White Whale", "KEKKEI_GENKAI", "ICE", 30, 60, 100, false, 0x96a2dff1));
 		registerJutsu("shooting_ice_spears", new JutsuData("Shooting Ice Spears", "KEKKEI_GENKAI", "ICE", 30, 60, 100, false, 0x96a2dff1));
 		// Magnet Release
-		registerJutsu("iron_sand_shower", new JutsuData("Iron Sand Shower", "KEKKEI_GENKAI", "MAGNET", 30, 60, 100, false, 0x96920fff));
-		registerJutsu("iron_sand_gathering_assault", new JutsuData("Iron Sand Gathering Assault", "KEKKEI_GENKAI", "MAGNET", 30, 60, 100, false, 0x96920fff));
-		registerJutsu("needle_sphere", new JutsuData("Needle Sphere", "KEKKEI_GENKAI", "MAGNET", 30, 60, 100, false, 0x96920fff));
-		registerJutsu("sand_burial_prison", new JutsuData("Sand Burial Prison", "KEKKEI_GENKAI", "MAGNET", 30, 60, 100, false, 0x96920fff));
+		registerJutsu("iron_sand_shower", new JutsuData("Iron Sand Shower", "KEKKEI_GENKAI", "MAGNET", 32, 45, 85, false, 0x96920fff));
+		registerJutsu("iron_sand_gathering_assault", new JutsuData("Iron Sand Gathering Assault", "KEKKEI_GENKAI", "MAGNET", 45, 55, 130, false, 0x96920fff));
+		registerJutsu("needle_sphere", new JutsuData("Needle Sphere", "KEKKEI_GENKAI", "MAGNET", 34, 45, 105, false, 0x96920fff));
+		registerJutsu("sand_burial_prison", new JutsuData("Sand Binding Coffin", "KEKKEI_GENKAI", "MAGNET", 35, 40, 140, false, 0x96920fff));
+		registerJutsu("ultimate_protection", new JutsuData("Ultimate Protection", "KEKKEI_GENKAI", "MAGNET", 3, 0, 0, true, 0x96920fff));
 		registerJutsu("sand_levitation", new JutsuData("Sand Levitation", "KEKKEI_GENKAI", "MAGNET", 30, 60, 100, true, 0x96920fff));
 		// Explosion Release
 		registerJutsu("landmine_fist", new JutsuData("Landmine Fist", "KEKKEI_GENKAI", "EXPLOSION", 30, 60, 100, true, 0x96dc611d));

@@ -1,43 +1,41 @@
 package net.mcreator.naruto.client;
 
-import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.client.event.RenderHandEvent;
+import org.joml.Matrix4f;
+
+import org.checkerframework.checker.units.qual.t;
+
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
+import net.neoforged.neoforge.client.event.RenderHandEvent;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.api.distmarker.Dist;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.util.Mth;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.util.Mth;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.Minecraft;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
-import org.joml.Matrix4f;
-
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.blaze3d.vertex.PoseStack;
 
 @EventBusSubscriber(value = Dist.CLIENT)
 public class ChidoriClientEffects {
 	private static final Map<UUID, ClientState> ACTIVE = new HashMap<>();
 	private static final List<HitBurst> HIT_BURSTS = new ArrayList<>();
-	private static final int WHITE_CORE = 0xFFFFFFFF;
-	private static final int PALE_BLUE = 0xFFF0FBFF;
-	private static final int ELECTRIC_BLUE = 0xFF00D8FF;
-	private static final int DEEP_BLUE = 0xEE006BFF;
-	private static final int BLUE_SHADOW = 0xD00026FF;
+	private static final int OUTER_WHITE = 0x55FFFFFF;
+	private static final int MID_WHITE = 0xAAFFFFFF;
+	private static final int OUTER_BLUE = 0x880038FF;
+	private static final int INNER_BLUE = 0xCC00A8FF;
+	private static final int CORE_BLUE = 0xFF58E7FF;
+	private static final int CORE_WHITE = 0xFFFFFFFF;
 	private static final Basis IDENTITY_BASIS = new Basis(new BoltVec(1.0F, 0.0F, 0.0F), new BoltVec(0.0F, 1.0F, 0.0F), new BoltVec(0.0F, 0.0F, 1.0F));
 
 	public static void setActive(UUID playerId, boolean active, int ticks, float chargePercent) {
@@ -58,7 +56,7 @@ public class ChidoriClientEffects {
 	}
 
 	public static void renderCloneLightning(PoseStack poseStack, MultiBufferSource bufferSource, float age) {
-		renderHandStorm(poseStack, bufferSource, age, 0.75F, false, false, IDENTITY_BASIS, 1.0F);
+		renderChidoriStorm(poseStack, bufferSource, age, 0.75F, false, false, IDENTITY_BASIS, 1.0F, 1.0F);
 	}
 
 	@SubscribeEvent
@@ -101,7 +99,7 @@ public class ChidoriClientEffects {
 		poseStack.mulPose(Axis.YP.rotationDegrees(10.0F + swing * 12.0F));
 		poseStack.mulPose(Axis.ZP.rotationDegrees(-6.0F));
 		float age = player.tickCount + event.getPartialTick();
-		renderHandStorm(poseStack, event.getMultiBufferSource(), age, state.chargePercent, true, !event.getItemStack().isEmpty(), IDENTITY_BASIS, -1.0F);
+		renderChidoriStorm(poseStack, event.getMultiBufferSource(), age, state.chargePercent, true, !event.getItemStack().isEmpty(), IDENTITY_BASIS, -1.0F, 1.0F);
 		poseStack.popPose();
 	}
 
@@ -127,7 +125,7 @@ public class ChidoriClientEffects {
 			poseStack.pushPose();
 			poseStack.translate(hand.x - camera.x, hand.y - camera.y, hand.z - camera.z);
 			float age = player.tickCount + partialTick;
-			renderHandStorm(poseStack, bufferSource, age, state.chargePercent, false, !player.getMainHandItem().isEmpty(), basisFromPlayer(player), 1.0F);
+			renderChidoriStorm(poseStack, bufferSource, age, state.chargePercent, false, !player.getMainHandItem().isEmpty(), basisFromPlayer(player), 1.0F, 1.0F);
 			poseStack.popPose();
 		}
 		for (HitBurst burst : HIT_BURSTS) {
@@ -138,7 +136,8 @@ public class ChidoriClientEffects {
 			poseStack.translate(position.x - camera.x, position.y - camera.y, position.z - camera.z);
 			poseStack.scale(burst.scale, burst.scale, burst.scale);
 			float age = burst.seed + (burst.totalTicks - burst.ticks) + partialTick;
-			renderHandStorm(poseStack, bufferSource, age, burst.chargePercent, false, false, basis, 1.0F);
+			float life = burst.ticks / (float) Math.max(1, burst.totalTicks);
+			renderChidoriStorm(poseStack, bufferSource, age, burst.chargePercent, false, false, basis, 1.0F, life);
 			poseStack.popPose();
 		}
 		bufferSource.endBatch(RenderType.lightning());
@@ -185,59 +184,82 @@ public class ChidoriClientEffects {
 		return new BoltVec((float) vec.x, (float) vec.y, (float) vec.z);
 	}
 
-	private static void renderHandStorm(PoseStack poseStack, MultiBufferSource bufferSource, float age, float chargePercent, boolean firstPerson, boolean weapon, Basis basis, float weaponForwardSign) {
+	private static void renderChidoriStorm(PoseStack poseStack, MultiBufferSource bufferSource, float age, float chargePercent, boolean firstPerson, boolean weapon, Basis basis, float weaponForwardSign, float alphaScale) {
 		VertexConsumer buffer = bufferSource.getBuffer(RenderType.lightning());
-		float seed = Mth.floor(age * 12.0F);
-		float radius = (firstPerson ? 0.38F : 0.3F) + chargePercent * 0.12F;
-		float pulse = 0.85F + 0.22F * Mth.sin(age * 2.2F);
-		renderCoreStorm(poseStack, buffer, basis, seed, radius * pulse, firstPerson);
-		int bolts = firstPerson ? 18 : 12;
-		for (int i = 0; i < bolts; i++) {
-			BoltVec direction = randomDirection(seed, i, 1);
-			BoltVec start = randomDirection(seed, i, 2).scale(radius * Mth.lerp(random(seed, i, 3), 0.02F, 0.14F));
-			BoltVec end = direction.scale(radius * Mth.lerp(random(seed, i, 4), 0.85F, 1.75F));
-			float chaos = radius * Mth.lerp(chargePercent, 0.22F, 0.42F);
-			renderJaggedBolt(poseStack, buffer, basis, start, end, chaos, 5 + (i % 4), seed + i * 17.0F, firstPerson ? 0.016F : 0.011F, PALE_BLUE, ELECTRIC_BLUE);
+		float seed = Mth.floor(age * 15.0F);
+		float pulse = 0.92F + 0.10F * Mth.sin(age * 4.1F);
+		float radius = ((firstPerson ? 0.34F : 0.26F) + chargePercent * 0.11F) * pulse;
+		if (weapon) {
+			renderWeaponLightning(poseStack, buffer, basis, seed, radius, firstPerson, weaponForwardSign, alphaScale);
+			return;
+		}
+		renderCentralFlash(poseStack, buffer, basis, seed, radius, firstPerson, alphaScale);
+		int mainBolts = firstPerson ? 17 : 12;
+		for (int i = 0; i < mainBolts; i++) {
+			BoltVec direction = randomDirection(seed, i, 10);
+			BoltVec start = randomDirection(seed, i, 20).scale(radius * Mth.lerp(random(seed, i, 30), 0.02F, 0.16F));
+			BoltVec end = direction.scale(radius * Mth.lerp(random(seed, i, 40), 0.90F, 1.65F));
+			float chaos = radius * Mth.lerp(chargePercent, 0.17F, 0.34F);
+			float width = firstPerson ? 0.0095F : 0.0065F;
+			renderFalseDarknessBolt(poseStack, buffer, basis, start, end, chaos, 5 + i % 3, seed + i * 19.0F, width, alphaScale);
 			if (i % 2 == 0) {
-				BoltVec branchDirection = randomDirection(seed, i, 9);
-				BoltVec branchStart = start.lerp(end, Mth.lerp(random(seed, i, 10), 0.35F, 0.72F));
-				BoltVec branchEnd = branchStart.add(branchDirection.scale(radius * Mth.lerp(random(seed, i, 11), 0.28F, 0.62F)));
-				renderJaggedBolt(poseStack, buffer, basis, branchStart, branchEnd, chaos * 0.55F, 3, seed + i * 31.0F, firstPerson ? 0.01F : 0.007F, WHITE_CORE, DEEP_BLUE);
+				BoltVec branchStart = start.lerp(end, Mth.lerp(random(seed, i, 50), 0.36F, 0.70F));
+				BoltVec branchEnd = branchStart.add(randomDirection(seed, i, 60).scale(radius * Mth.lerp(random(seed, i, 70), 0.24F, 0.52F)));
+				renderFalseDarknessBolt(poseStack, buffer, basis, branchStart, branchEnd, chaos * 0.50F, 3, seed + i * 31.0F, width * 0.7F, alphaScale);
 			}
 		}
-		if (weapon) {
-			renderWeaponStorm(poseStack, buffer, basis, seed, radius, firstPerson, weaponForwardSign);
-		}
+		renderOrbitBolts(poseStack, buffer, basis, seed, radius, firstPerson, alphaScale);
 	}
 
-	private static void renderCoreStorm(PoseStack poseStack, VertexConsumer buffer, Basis basis, float seed, float radius, boolean firstPerson) {
+	private static void renderCentralFlash(PoseStack poseStack, VertexConsumer buffer, Basis basis, float seed, float radius, boolean firstPerson, float alphaScale) {
 		int coreBolts = firstPerson ? 8 : 6;
 		for (int i = 0; i < coreBolts; i++) {
-			BoltVec direction = randomDirection(seed, i, 30);
-			BoltVec start = direction.scale(-radius * Mth.lerp(random(seed, i, 31), 0.18F, 0.42F));
-			BoltVec end = direction.scale(radius * Mth.lerp(random(seed, i, 32), 0.35F, 0.72F));
-			renderJaggedBolt(poseStack, buffer, basis, start, end, radius * 0.14F, 3, seed + i * 13.0F, firstPerson ? 0.015F : 0.01F, WHITE_CORE, PALE_BLUE);
+			BoltVec direction = randomDirection(seed, i, 90);
+			BoltVec start = direction.scale(-radius * Mth.lerp(random(seed, i, 91), 0.10F, 0.30F));
+			BoltVec end = direction.scale(radius * Mth.lerp(random(seed, i, 92), 0.30F, 0.66F));
+			renderFalseDarknessBolt(poseStack, buffer, basis, start, end, radius * 0.10F, 3, seed + i * 11.0F, firstPerson ? 0.010F : 0.0068F, alphaScale);
 		}
 	}
 
-	private static void renderWeaponStorm(PoseStack poseStack, VertexConsumer buffer, Basis basis, float seed, float radius, boolean firstPerson, float forwardSign) {
-		float length = firstPerson ? 1.18F : 0.86F;
-		BoltVec root = new BoltVec(0.0F, 0.0F, 0.0F);
-		BoltVec tip = new BoltVec(0.0F, 0.0F, forwardSign * length);
-		renderJaggedBolt(poseStack, buffer, basis, root, tip, radius * 0.18F, 6, seed + 401.0F, firstPerson ? 0.019F : 0.013F, WHITE_CORE, ELECTRIC_BLUE);
-		for (int i = 0; i < 13; i++) {
-			float t = Mth.lerp(random(seed, i, 47), 0.12F, 0.98F);
-			BoltVec start = new BoltVec(randomSigned(seed, i, 41) * radius * 0.14F, randomSigned(seed, i, 42) * radius * 0.12F, forwardSign * length * t);
-			BoltVec end = new BoltVec(randomSigned(seed, i, 44) * radius * 0.22F, randomSigned(seed, i, 45) * radius * 0.2F, forwardSign * (length * t + randomSigned(seed, i, 46) * radius * 0.45F));
-			renderJaggedBolt(poseStack, buffer, basis, start, end, radius * 0.24F, 4, seed + i * 43.0F, firstPerson ? 0.013F : 0.009F, PALE_BLUE, ELECTRIC_BLUE);
-			if (i % 3 == 0) {
-				BoltVec wrapEnd = new BoltVec(-end.x * 0.75F, end.y * 0.75F, end.z + forwardSign * radius * 0.08F);
-				renderJaggedBolt(poseStack, buffer, basis, start, wrapEnd, radius * 0.18F, 3, seed + i * 57.0F, firstPerson ? 0.009F : 0.006F, WHITE_CORE, DEEP_BLUE);
+	private static void renderOrbitBolts(PoseStack poseStack, VertexConsumer buffer, Basis basis, float seed, float radius, boolean firstPerson, float alphaScale) {
+		int rings = firstPerson ? 3 : 2;
+		for (int ring = 0; ring < rings; ring++) {
+			float ringRadius = radius * (0.52F + ring * 0.24F);
+			float spin = seed * 0.11F + ring * 2.1F;
+			int points = 6;
+			BoltVec previous = null;
+			for (int i = 0; i <= points; i++) {
+				float t = i / (float) points;
+				float angle = t * Mth.TWO_PI + spin;
+				BoltVec point = new BoltVec(Mth.cos(angle) * ringRadius, Mth.sin(angle * 1.37F + spin) * ringRadius * 0.30F, Mth.sin(angle) * ringRadius * 0.52F);
+				point = point.add(randomDirection(seed, i + ring * 10, 120).scale(radius * 0.07F));
+				if (previous != null) {
+					renderFalseDarknessBolt(poseStack, buffer, basis, previous, point, radius * 0.07F, 2, seed + ring * 41.0F + i, firstPerson ? 0.0065F : 0.0045F, alphaScale * 0.82F);
+				}
+				previous = point;
 			}
 		}
 	}
 
-	private static void renderJaggedBolt(PoseStack poseStack, VertexConsumer buffer, Basis basis, BoltVec start, BoltVec end, float chaos, int segments, float seed, float width, int innerColor, int outerColor) {
+	private static void renderWeaponLightning(PoseStack poseStack, VertexConsumer buffer, Basis basis, float seed, float radius, boolean firstPerson, float forwardSign, float alphaScale) {
+		float length = firstPerson ? 1.16F : 0.84F;
+		BoltVec root = new BoltVec(0.0F, length * 0.52F, 0.0F);
+		BoltVec tip = new BoltVec(0.0F, -length * 0.48F, 0.0F);
+		renderFalseDarknessBolt(poseStack, buffer, basis, root, tip, radius * 0.12F, 6, seed + 401.0F, firstPerson ? 0.011F : 0.0075F, alphaScale);
+		for (int i = 0; i < 12; i++) {
+			float t = Mth.lerp(random(seed, i, 140), 0.02F, 1.0F);
+			float y = Mth.lerp(t, root.y, tip.y);
+			BoltVec start = new BoltVec(randomSigned(seed, i, 141) * radius * 0.12F, y, randomSigned(seed, i, 142) * radius * 0.10F);
+			BoltVec end = new BoltVec(randomSigned(seed, i, 143) * radius * 0.20F, y + randomSigned(seed, i, 145) * radius * 0.38F, randomSigned(seed, i, 144) * radius * 0.18F);
+			renderFalseDarknessBolt(poseStack, buffer, basis, start, end, radius * 0.15F, 4, seed + i * 43.0F, firstPerson ? 0.0085F : 0.0058F, alphaScale);
+			if (i % 3 == 0) {
+				BoltVec wrapEnd = new BoltVec(-end.x * 0.80F, end.y - radius * 0.08F, end.z * 0.75F);
+				renderFalseDarknessBolt(poseStack, buffer, basis, start, wrapEnd, radius * 0.11F, 3, seed + i * 57.0F, firstPerson ? 0.006F : 0.0042F, alphaScale);
+			}
+		}
+	}
+
+	private static void renderFalseDarknessBolt(PoseStack poseStack, VertexConsumer buffer, Basis basis, BoltVec start, BoltVec end, float chaos, int segments, float seed, float width, float alphaScale) {
 		BoltVec previous = start;
 		BoltVec tangent = end.subtract(start).normalize();
 		BoltVec normalA = perpendicular(tangent);
@@ -247,12 +269,14 @@ public class ChidoriClientEffects {
 			BoltVec point = start.lerp(end, t);
 			if (i < segments) {
 				float taper = 1.0F - Math.abs(t - 0.5F) * 0.55F;
-				point = point.add(normalA.scale(randomSigned(seed, i, 5) * chaos * taper)).add(normalB.scale(randomSigned(seed, i, 6) * chaos * taper)).add(tangent.scale(randomSigned(seed, i, 7) * chaos * 0.2F));
+				point = point.add(normalA.scale(randomSigned(seed, i, 1) * chaos * taper)).add(normalB.scale(randomSigned(seed, i, 2) * chaos * taper)).add(tangent.scale(randomSigned(seed, i, 3) * chaos * 0.18F));
 			}
-			float outerAlpha = ((outerColor >>> 24) & 0xFF) / 255.0F;
-			renderSegment(poseStack, buffer, basis, previous, point, width * 4.2F, withAlpha(BLUE_SHADOW, outerAlpha));
-			renderSegment(poseStack, buffer, basis, previous, point, width * 2.4F, outerColor);
-			renderSegment(poseStack, buffer, basis, previous, point, width, innerColor);
+			renderSegment(poseStack, buffer, basis, previous, point, width * 4.8F, withAlpha(OUTER_WHITE, alphaScale * 0.90F));
+			renderSegment(poseStack, buffer, basis, previous, point, width * 3.2F, withAlpha(OUTER_BLUE, alphaScale * 0.95F));
+			renderSegment(poseStack, buffer, basis, previous, point, width * 2.0F, withAlpha(MID_WHITE, alphaScale * 0.95F));
+			renderSegment(poseStack, buffer, basis, previous, point, width * 1.15F, withAlpha(INNER_BLUE, alphaScale));
+			renderSegment(poseStack, buffer, basis, previous, point, width * 0.78F, withAlpha(CORE_BLUE, alphaScale));
+			renderSegment(poseStack, buffer, basis, previous, point, width * 0.42F, withAlpha(CORE_WHITE, alphaScale));
 			previous = point;
 		}
 	}

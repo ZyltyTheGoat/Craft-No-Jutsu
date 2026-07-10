@@ -2078,6 +2078,20 @@
           "src/main/java/net/mcreator/naruto/potion/GenjutsuMobEffect.java"
         ]
       }
+    },
+    {
+      "name": "Gourd",
+      "type": "armor",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "gourd",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/naruto/item/GourdItem.java",
+          "src/main/resources/assets/naruto/models/item/gourd_chestplate.json"
+        ]
+      },
+      "path": "~/Items/Armor"
     }
   ],
   "variable_elements": [
@@ -2185,7 +2199,11 @@
       "subtitle": ""
     }
   ],
-  "tag_elements": {},
+  "tag_elements": {
+    "ITEMS:minecraft:chest_armor": [
+      "~CUSTOM:Gourd.body"
+    ]
+  },
   "tab_element_order": {},
   "language_map": {
     "en_us": {
@@ -2285,7 +2303,8 @@
       "subtitles.electric_spark2": "",
       "subtitles.espark_1": "",
       "subtitles.electric_spark": "",
-      "effect.naruto.genjutsu": "Genjutsu"
+      "effect.naruto.genjutsu": "Genjutsu",
+      "item.naruto.gourd_chestplate": "Gourd"
     }
   },
   "metadata": {
@@ -2408,6 +2427,10 @@
                 "children": []
               }
             ]
+          },
+          {
+            "name": "Armor",
+            "children": []
           }
         ]
       },

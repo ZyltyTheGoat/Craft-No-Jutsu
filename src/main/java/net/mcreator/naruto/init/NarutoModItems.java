@@ -55,6 +55,7 @@ public class NarutoModItems {
 	public static final DeferredItem<Item> SCROLL_SHADOW_IMITATION;
 	public static final DeferredItem<Item> SCROLL_MULTI_SIZE;
 	public static final DeferredItem<Item> SCROLL_FOUR_SYMBOL_SEAL;
+	public static final DeferredItem<Item> GOURD_CHESTPLATE;
 	static {
 		DUMMY_SPAWN_EGG = REGISTRY.register("dummy_spawn_egg", () -> new DeferredSpawnEggItem(NarutoModEntities.DUMMY, -1, -1, new Item.Properties()));
 		SCROLL_GREAT_FIREBALL = REGISTRY.register("scroll_great_fireball", ScrollGreatFireballItem::new);
@@ -97,6 +98,7 @@ public class NarutoModItems {
 		SCROLL_SHADOW_IMITATION = REGISTRY.register("scroll_shadow_imitation", ScrollShadowImitationItem::new);
 		SCROLL_MULTI_SIZE = REGISTRY.register("scroll_multi_size", ScrollMultiSizeItem::new);
 		SCROLL_FOUR_SYMBOL_SEAL = REGISTRY.register("scroll_four_symbol_seal", ScrollFourSymbolSealItem::new);
+		GOURD_CHESTPLATE = REGISTRY.register("gourd_chestplate", GourdItem.Chestplate::new);
 	}
 	// Start of user code block custom items
 	// End of user code block custom items

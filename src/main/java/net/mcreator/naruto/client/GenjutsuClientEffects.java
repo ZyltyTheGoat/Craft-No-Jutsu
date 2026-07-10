@@ -14,10 +14,14 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.util.Mth;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
+import net.mcreator.naruto.NarutoMod;
 import net.mcreator.naruto.client.gui.NarutoWheelShaders;
 import net.mcreator.naruto.init.NarutoModMobEffects;
 
@@ -34,7 +38,21 @@ import com.mojang.math.Axis;
 public class GenjutsuClientEffects {
 	private static final int FADE_TICKS = 24;
 	private static final int PHANTOM_COUNT = 7;
+	private static final ResourceLocation SHARINGAN_INDICATOR = ResourceLocation.fromNamespaceAndPath(NarutoMod.MODID, "textures/screens/icon_sharingan.png");
 	private static int visualTicks;
+	private static int sharinganNightmareTicks;
+	private static int sharinganNightmareTotal;
+
+	public static void triggerSharinganNightmare(int ticks) {
+		int duration = Mth.clamp(ticks, 20, 140);
+		sharinganNightmareTicks = duration;
+		sharinganNightmareTotal = duration;
+		Minecraft minecraft = Minecraft.getInstance();
+		if (minecraft.level != null && minecraft.player != null) {
+			minecraft.level.playLocalSound(minecraft.player.getX(), minecraft.player.getY(), minecraft.player.getZ(), SoundEvents.ELDER_GUARDIAN_CURSE, SoundSource.PLAYERS, 0.85F, 0.65F, false);
+			minecraft.level.playLocalSound(minecraft.player.getX(), minecraft.player.getY(), minecraft.player.getZ(), SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 0.55F, 0.45F, false);
+		}
+	}
 
 	@SubscribeEvent
 	public static void onClientTick(ClientTickEvent.Post event) {
@@ -42,6 +60,9 @@ public class GenjutsuClientEffects {
 			visualTicks = Math.min(FADE_TICKS, visualTicks + 2);
 		} else if (visualTicks > 0) {
 			visualTicks--;
+		}
+		if (sharinganNightmareTicks > 0) {
+			sharinganNightmareTicks--;
 		}
 	}
 
@@ -53,9 +74,10 @@ public class GenjutsuClientEffects {
 			return;
 		}
 		float time = visualTime(player, event.getPartialTick());
-		event.setYaw(event.getYaw() + (Mth.sin(time * 0.74F) * 1.25F + Mth.sin(time * 2.15F) * 0.35F) * strength);
-		event.setPitch(event.getPitch() + (Mth.cos(time * 0.61F) * 0.75F + Mth.sin(time * 1.72F) * 0.25F) * strength);
-		event.setRoll(event.getRoll() + (Mth.sin(time * 1.27F) * 2.2F + Mth.sin(time * 3.8F) * 0.6F) * strength);
+		float nightmare = sharinganStrength();
+		event.setYaw(event.getYaw() + (Mth.sin(time * 0.74F) * 1.25F + Mth.sin(time * 2.15F) * 0.35F + Mth.sin(time * 5.4F) * nightmare * 0.8F) * strength);
+		event.setPitch(event.getPitch() + (Mth.cos(time * 0.61F) * 0.75F + Mth.sin(time * 1.72F) * 0.25F + Mth.cos(time * 4.6F) * nightmare * 0.45F) * strength);
+		event.setRoll(event.getRoll() + (Mth.sin(time * 1.27F) * 2.2F + Mth.sin(time * 3.8F) * 0.6F + Mth.sin(time * 6.2F) * nightmare * 2.0F) * strength);
 	}
 
 	@SubscribeEvent
@@ -76,9 +98,10 @@ public class GenjutsuClientEffects {
 		if (strength <= 0.0F) {
 			return;
 		}
-		event.setRed(Mth.lerp(0.18F * strength, event.getRed(), 0.42F));
-		event.setGreen(Mth.lerp(0.22F * strength, event.getGreen(), 0.08F));
-		event.setBlue(Mth.lerp(0.2F * strength, event.getBlue(), 0.22F));
+		float nightmare = sharinganStrength();
+		event.setRed(Mth.lerp((0.18F + nightmare * 0.22F) * strength, event.getRed(), 0.42F + nightmare * 0.18F));
+		event.setGreen(Mth.lerp((0.22F + nightmare * 0.32F) * strength, event.getGreen(), 0.08F));
+		event.setBlue(Mth.lerp((0.2F + nightmare * 0.28F) * strength, event.getBlue(), 0.22F));
 	}
 
 	@SubscribeEvent
@@ -125,6 +148,7 @@ public class GenjutsuClientEffects {
 		RenderSystem.enableBlend();
 		RenderSystem.defaultBlendFunc();
 		renderShaderOverlay(guiGraphics, width, height, time, strength);
+		renderSharinganIndicator(guiGraphics, width, height, time);
 		RenderSystem.disableBlend();
 	}
 
@@ -153,15 +177,56 @@ public class GenjutsuClientEffects {
 	}
 
 	private static void renderShaderOverlay(GuiGraphics guiGraphics, int width, int height, float time, float strength) {
-		NarutoWheelShaders.prepareGenjutsuDistortionShader(width, height, time, Mth.clamp(strength, 0.0F, 1.65F));
+		float nightmare = sharinganStrength();
+		NarutoWheelShaders.prepareGenjutsuDistortionShader(width, height, time, Mth.clamp(strength + nightmare * 0.75F, 0.0F, 1.95F));
 		Matrix4f matrix = guiGraphics.pose().last().pose();
-		int alpha = Mth.clamp((int) (190 * Mth.clamp(strength, 0.0F, 1.0F)), 0, 210);
+		int alpha = Mth.clamp((int) ((190 + nightmare * 45) * Mth.clamp(strength, 0.0F, 1.0F)), 0, 240);
 		BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 		buffer.addVertex(matrix, 0.0F, height, 0.0F).setColor(255, 255, 255, alpha);
 		buffer.addVertex(matrix, width, height, 0.0F).setColor(255, 255, 255, alpha);
 		buffer.addVertex(matrix, width, 0.0F, 0.0F).setColor(255, 255, 255, alpha);
 		buffer.addVertex(matrix, 0.0F, 0.0F, 0.0F).setColor(255, 255, 255, alpha);
 		BufferUploader.drawWithShader(buffer.buildOrThrow());
+	}
+
+	private static void renderSharinganIndicator(GuiGraphics guiGraphics, int width, int height, float time) {
+		float strength = sharinganStrength();
+		if (strength <= 0.0F) {
+			return;
+		}
+		float pulse = 0.84F + 0.16F * Mth.sin(time * 0.36F);
+		int size = Mth.floor(Math.min(width, height) * (0.22F + strength * 0.09F) * pulse);
+		int x = width / 2 - size / 2;
+		int y = height / 2 - size / 2;
+		int alpha = Mth.clamp(Mth.floor(230.0F * strength), 0, 230);
+		Minecraft minecraft = Minecraft.getInstance();
+		if (minecraft.getResourceManager().getResource(SHARINGAN_INDICATOR).isPresent()) {
+			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, alpha / 255.0F);
+			guiGraphics.pose().pushPose();
+			guiGraphics.pose().translate(width / 2.0F, height / 2.0F, 0.0F);
+			guiGraphics.pose().mulPose(Axis.ZP.rotationDegrees(time * 18.0F));
+			guiGraphics.blit(SHARINGAN_INDICATOR, -size / 2, -size / 2, 0.0F, 0.0F, size, size, size, size);
+			guiGraphics.pose().popPose();
+			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+		} else {
+			renderFallbackSharingan(guiGraphics, x, y, size, alpha);
+		}
+		int vignette = Mth.clamp(Mth.floor(135.0F * strength), 0, 135) << 24;
+		guiGraphics.fill(0, 0, width, height, vignette | 0x220000);
+	}
+
+	private static void renderFallbackSharingan(GuiGraphics guiGraphics, int x, int y, int size, int alpha) {
+		int red = (alpha << 24) | 0xB80000;
+		int black = (Mth.clamp(alpha + 20, 0, 255) << 24);
+		int cx = x + size / 2;
+		int cy = y + size / 2;
+		guiGraphics.fill(x + size / 6, cy - size / 8, x + size * 5 / 6, cy + size / 8, red);
+		guiGraphics.fill(cx - size / 8, y + size / 6, cx + size / 8, y + size * 5 / 6, red);
+		guiGraphics.fill(cx - size / 12, cy - size / 12, cx + size / 12, cy + size / 12, black);
+		guiGraphics.fill(cx - size / 3, cy - 2, cx - size / 5, cy + 2, black);
+		guiGraphics.fill(cx + size / 5, cy - 2, cx + size / 3, cy + 2, black);
+		guiGraphics.fill(cx - 2, cy - size / 3, cx + 2, cy - size / 5, black);
+		guiGraphics.fill(cx - 2, cy + size / 5, cx + 2, cy + size / 3, black);
 	}
 
 	private static void addQuad(BufferBuilder buffer, Matrix4f matrix, float x1, float y1, float z1, float x2, float y2, float z2, int r, int g, int b, int a) {
@@ -182,7 +247,7 @@ public class GenjutsuClientEffects {
 		}
 		MobEffectInstance effect = player.getEffect(NarutoModMobEffects.GENJUTSU);
 		float amplifier = effect == null ? 0.0F : effect.getAmplifier();
-		return Mth.clamp((visualTicks / (float) FADE_TICKS) * (1.0F + amplifier * 0.18F), 0.0F, 1.65F);
+		return Mth.clamp((visualTicks / (float) FADE_TICKS) * (1.0F + amplifier * 0.18F) + sharinganStrength() * 0.55F, 0.0F, 1.95F);
 	}
 
 	private static float visualTime(Player player, double partialTick) {
@@ -192,5 +257,13 @@ public class GenjutsuClientEffects {
 	private static float random(float seed, float index, int salt) {
 		float value = Mth.sin(seed * 91.345F + index * 37.721F + salt * 17.37F) * 43758.5453F;
 		return value - Mth.floor(value);
+	}
+
+	private static float sharinganStrength() {
+		if (sharinganNightmareTicks <= 0 || sharinganNightmareTotal <= 0) {
+			return 0.0F;
+		}
+		float life = sharinganNightmareTicks / (float) sharinganNightmareTotal;
+		return Mth.clamp(Mth.sin(life * Mth.PI) * 1.25F + life * 0.45F, 0.0F, 1.0F);
 	}
 }

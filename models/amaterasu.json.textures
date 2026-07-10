@@ -1,0 +1,16 @@
+{
+  "mappings": {
+    "default": {
+      "name": "default",
+      "map": {
+        "2": "amaterasu_0"
+      }
+    },
+    "tall": {
+      "name": "tall",
+      "map": {
+        "2": "amaterasu_1"
+      }
+    }
+  }
+}

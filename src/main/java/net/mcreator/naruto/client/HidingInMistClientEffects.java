@@ -1,32 +1,32 @@
 package net.mcreator.naruto.client;
 
-import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.client.event.RenderGuiEvent;
+import org.joml.Matrix4f;
+
 import net.neoforged.neoforge.client.event.ViewportEvent;
+import net.neoforged.neoforge.client.event.RenderGuiEvent;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.api.distmarker.Dist;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.util.Mth;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.Minecraft;
 
 import net.mcreator.naruto.client.gui.NarutoWheelShaders;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.UUID;
+import java.util.Map;
+import java.util.Iterator;
+import java.util.HashMap;
 
-import org.joml.Matrix4f;
-
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.systems.RenderSystem;
 
 @EventBusSubscriber(value = Dist.CLIENT)
 public class HidingInMistClientEffects {
@@ -65,9 +65,9 @@ public class HidingInMistClientEffects {
 		if (strength <= 0.0F) {
 			return;
 		}
-		float blend = Mth.clamp(strength * 0.72F, 0.0F, 0.82F);
-		event.setRed(Mth.lerp(blend, event.getRed(), 0.72F));
-		event.setGreen(Mth.lerp(blend, event.getGreen(), 0.88F));
+		float blend = Mth.clamp(strength * 0.88F, 0.0F, 0.92F);
+		event.setRed(Mth.lerp(blend, event.getRed(), 0.68F));
+		event.setGreen(Mth.lerp(blend, event.getGreen(), 0.86F));
 		event.setBlue(Mth.lerp(blend, event.getBlue(), 1.0F));
 	}
 
@@ -102,9 +102,10 @@ public class HidingInMistClientEffects {
 	}
 
 	private static void renderShaderOverlay(GuiGraphics guiGraphics, int width, int height, float time, float strength) {
-		NarutoWheelShaders.prepareMistVeilShader(width, height, time, Mth.clamp(strength, 0.0F, 1.0F));
+		float clampedStrength = Mth.clamp(strength, 0.0F, 1.0F);
+		NarutoWheelShaders.prepareMistVeilShader(width, height, time, clampedStrength);
 		Matrix4f matrix = guiGraphics.pose().last().pose();
-		int alpha = Mth.clamp((int) (205 * Mth.clamp(strength, 0.0F, 1.0F)), 0, 215);
+		int alpha = Mth.clamp((int) (245 * clampedStrength), 0, 245);
 		BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 		buffer.addVertex(matrix, 0.0F, height, 0.0F).setColor(255, 255, 255, alpha);
 		buffer.addVertex(matrix, width, height, 0.0F).setColor(255, 255, 255, alpha);
@@ -142,10 +143,16 @@ public class HidingInMistClientEffects {
 			if (distance > field.radius) {
 				continue;
 			}
-			float inside = 1.0F - distance / field.radius;
-			float edgeFade = Mth.clamp(inside * 1.45F, 0.0F, 1.0F);
-			float casterClarity = ownMist ? 0.38F : 1.0F;
-			strongest = Math.max(strongest, edgeFade * casterClarity);
+			boolean previewEnemyView = ownMist && includeOwnMist && localPlayer.isShiftKeyDown();
+			float normalizedDistance = distance / field.radius;
+			float inside = 1.0F - normalizedDistance;
+			float closeFog = 1.0F - Mth.clamp(normalizedDistance / 0.75F, 0.0F, 1.0F);
+			closeFog = Mth.sqrt(closeFog);
+			float fieldFog = Mth.clamp(inside * 2.8F, 0.0F, 1.0F);
+			fieldFog = Mth.sqrt(fieldFog);
+			float combinedFog = Mth.clamp(fieldFog * 1.05F + closeFog * 0.95F, 0.0F, 1.0F);
+			float casterClarity = ownMist && !previewEnemyView ? 0.62F : 1.0F;
+			strongest = Math.max(strongest, combinedFog * casterClarity);
 		}
 		return Mth.clamp(strongest, 0.0F, 1.0F);
 	}

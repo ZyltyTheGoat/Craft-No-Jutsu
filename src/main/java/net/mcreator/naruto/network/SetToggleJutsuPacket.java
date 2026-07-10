@@ -9,6 +9,8 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.FriendlyByteBuf;
 
 import net.mcreator.naruto.NarutoMod;
+import net.mcreator.naruto.JutsuRegistry;
+import net.mcreator.naruto.DojutsuStateHelper;
 
 public record SetToggleJutsuPacket(String jutsuId) implements CustomPacketPayload {
 	public static final Type<SetToggleJutsuPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(NarutoMod.MODID, "set_active_toggle_jutsu"));
@@ -25,7 +27,8 @@ public record SetToggleJutsuPacket(String jutsuId) implements CustomPacketPayloa
 				// Get player variables
 				NarutoModVariables.PlayerVariables playerVars = serverPlayer.getData(NarutoModVariables.PLAYER_VARIABLES);
 				// Set the active toggle jutsu
-				playerVars.activeToggleJutsu = packet.jutsuId;
+				JutsuRegistry.initializeJutsus();
+				playerVars.activeToggleJutsu = DojutsuStateHelper.normalize(packet.jutsuId);
 				// Sync to client (assumes your PlayerVariables has a sync method)
 				playerVars.markSyncDirty();
 			}

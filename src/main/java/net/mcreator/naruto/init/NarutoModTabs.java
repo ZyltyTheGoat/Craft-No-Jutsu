@@ -68,6 +68,8 @@ public class NarutoModTabs {
 	public static void buildTabContentsVanilla(BuildCreativeModeTabContentsEvent tabData) {
 		if (tabData.getTabKey() == CreativeModeTabs.SPAWN_EGGS) {
 			tabData.accept(NarutoModItems.DUMMY_SPAWN_EGG.get());
+		} else if (tabData.getTabKey() == CreativeModeTabs.COMBAT) {
+			tabData.accept(NarutoModItems.GOURD_CHESTPLATE.get());
 		}
 	}
 }

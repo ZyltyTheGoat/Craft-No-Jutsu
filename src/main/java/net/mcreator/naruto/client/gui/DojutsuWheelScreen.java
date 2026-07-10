@@ -30,6 +30,7 @@ import net.mcreator.naruto.init.NarutoModKeyMappings;
 import net.mcreator.naruto.JutsuRegistry;
 import net.mcreator.naruto.JutsuIdList;
 import net.mcreator.naruto.JutsuData;
+import net.mcreator.naruto.DojutsuStateHelper;
 
 import java.util.stream.Collectors;
 import java.util.*;
@@ -48,6 +49,8 @@ public class DojutsuWheelScreen extends AbstractContainerScreen<DojutsuWheelMenu
 	private static final int PAGE_INDICATOR_COLOR = 0xFFFFFFFF;
 	private static final int PAGE_DOT_COLOR = 0x80FFFFFF;
 	private static final int PAGE_DOT_ACTIVE_COLOR = 0xFFFFFFFF;
+	private static final int EYE_CONFIG_BUTTON_WIDTH = 82;
+	private static final int EYE_CONFIG_BUTTON_HEIGHT = 18;
 	private static final float GAP_WIDTH_PIXELS = 0F;
 	private static final int ICON_SIZE = 64; // Size of the nature icon in pixels
 	private final Level world;
@@ -187,6 +190,15 @@ public class DojutsuWheelScreen extends AbstractContainerScreen<DojutsuWheelMenu
 			renderHoveredJutsuInfo(guiGraphics, windowWidth, windowHeight);
 		}
 		renderPageIndicator(guiGraphics, windowWidth, windowHeight);
+		renderEyeConfigButton(guiGraphics, windowWidth, windowHeight);
+	}
+
+	private void renderEyeConfigButton(GuiGraphics guiGraphics, int windowWidth, int windowHeight) {
+		int x = windowWidth - EYE_CONFIG_BUTTON_WIDTH - 12;
+		int y = 12;
+		guiGraphics.fill(x, y, x + EYE_CONFIG_BUTTON_WIDTH, y + EYE_CONFIG_BUTTON_HEIGHT, 0xAA181818);
+		guiGraphics.fill(x, y, x + EYE_CONFIG_BUTTON_WIDTH, y + 1, 0x80FFFFFF);
+		guiGraphics.drawCenteredString(this.font, "Eye Config", x + EYE_CONFIG_BUTTON_WIDTH / 2, y + 5, 0xFFFFFF);
 	}
 
 	private List<String> getCurrentJutsuNames() {
@@ -527,6 +539,15 @@ public class DojutsuWheelScreen extends AbstractContainerScreen<DojutsuWheelMenu
 		if (animation.isClosing()) {
 			return true;
 		}
+		if (button == 0 && this.minecraft != null) {
+			int windowWidth = this.minecraft.getWindow().getGuiScaledWidth();
+			int x = windowWidth - EYE_CONFIG_BUTTON_WIDTH - 12;
+			int y = 12;
+			if (mouseX >= x && mouseX < x + EYE_CONFIG_BUTTON_WIDTH && mouseY >= y && mouseY < y + EYE_CONFIG_BUTTON_HEIGHT) {
+				this.minecraft.setScreen(new DojutsuEyeConfigScreen(this));
+				return true;
+			}
+		}
 		List<String> jutsuIds = getCurrentJutsuIds();
 		List<String> jutsuNames = getCurrentJutsuNames();
 		if (jutsuIds.isEmpty() || this.hovered < 0 || this.hovered >= jutsuIds.size() || this.minecraft == null || this.minecraft.player == null) {
@@ -556,19 +577,13 @@ public class DojutsuWheelScreen extends AbstractContainerScreen<DojutsuWheelMenu
 			// Get the dojutsu nature (remove "_activate" suffix if present)
 			String dojutsuNature = jutsuData.getNature();
 			if (isActivationJutsu) {
-				// For activation jutsus, just toggle them in activeToggleJutsu
 				String currentToggles = entity.getData(NarutoModVariables.PLAYER_VARIABLES).activeToggleJutsu;
-				Set<String> toggleSet = currentToggles != null && !currentToggles.isEmpty() ? Arrays.stream(currentToggles.split(",")).map(String::trim).filter(s -> !s.isEmpty()).collect(Collectors.toSet()) : new HashSet<>();
-				// Toggle this activation jutsu
-				if (!toggleSet.remove(selectedJutsuId)) {
-					toggleSet.add(selectedJutsuId);
-				}
-				String updatedToggles = String.join(",", toggleSet);
+				boolean wasActive = JutsuIdList.has(currentToggles, selectedJutsuId);
+				String updatedToggles = DojutsuStateHelper.toggleActivation(currentToggles, selectedJutsuId);
 				entity.getData(NarutoModVariables.PLAYER_VARIABLES).activeToggleJutsu = updatedToggles;
 				PacketDistributor.sendToServer(new SetToggleJutsuPacket(updatedToggles));
-				// Update activeDojutsu to this dojutsu nature
-				entity.getData(NarutoModVariables.PLAYER_VARIABLES).activeDojutsu = dojutsuNature;
-				PacketDistributor.sendToServer(new SetActiveDojutsuPacket(dojutsuNature));
+				entity.getData(NarutoModVariables.PLAYER_VARIABLES).activeDojutsu = wasActive ? "" : dojutsuNature;
+				PacketDistributor.sendToServer(new SetActiveDojutsuPacket(wasActive ? "" : dojutsuNature));
 				// Close the wheel if this is not a toggle jutsu
 				if (!jutsuData.getIsToggle()) {
 					animation.startClosing(() -> this.minecraft.player.closeContainer());
@@ -583,33 +598,14 @@ public class DojutsuWheelScreen extends AbstractContainerScreen<DojutsuWheelMenu
 				// Handle toggle logic for non-activation dojutsu jutsus
 				if (jutsuData.getIsToggle()) {
 					String currentToggles = entity.getData(NarutoModVariables.PLAYER_VARIABLES).activeToggleJutsu;
-					Set<String> toggleSet = currentToggles != null && !currentToggles.isEmpty() ? Arrays.stream(currentToggles.split(",")).map(String::trim).filter(s -> !s.isEmpty()).collect(Collectors.toSet()) : new HashSet<>();
-					// Remove other dojutsu jutsus from different natures
-					Set<String> toRemove = new HashSet<>();
-					for (String toggledJutsuId : toggleSet) {
-						JutsuData toggledJutsuData = JutsuRegistry.getJutsu(toggledJutsuId);
-						if (toggledJutsuData != null && toggledJutsuData.getType().equalsIgnoreCase("DOJUTSU")) {
-							String toggledNature = toggledJutsuData.getNature();
-							if (!toggledNature.equalsIgnoreCase(dojutsuNature)) {
-								toRemove.add(toggledJutsuId);
-							}
-						}
-					}
-					toggleSet.removeAll(toRemove);
-					// Add the corresponding activation jutsu if it exists
-					String activationJutsuId = dojutsuNature.toLowerCase() + "_activate";
-					JutsuData activationJutsu = JutsuRegistry.getJutsu(activationJutsuId);
-					if (activationJutsu != null && activationJutsu.getIsToggle()) {
-						toggleSet.add(activationJutsuId);
-					}
-					// Toggle this jutsu
-					if (!toggleSet.remove(selectedJutsuId)) {
-						toggleSet.add(selectedJutsuId);
-					}
-					String updatedToggles = String.join(",", toggleSet);
+					String updatedToggles = DojutsuStateHelper.toggleDojutsuAbility(currentToggles, selectedJutsuId, dojutsuNature);
 					entity.getData(NarutoModVariables.PLAYER_VARIABLES).activeToggleJutsu = updatedToggles;
 					PacketDistributor.sendToServer(new SetToggleJutsuPacket(updatedToggles));
 				} else {
+					String currentToggles = entity.getData(NarutoModVariables.PLAYER_VARIABLES).activeToggleJutsu;
+					String updatedToggles = DojutsuStateHelper.ensureActive(currentToggles, dojutsuNature);
+					entity.getData(NarutoModVariables.PLAYER_VARIABLES).activeToggleJutsu = updatedToggles;
+					PacketDistributor.sendToServer(new SetToggleJutsuPacket(updatedToggles));
 					// For non-toggle jutsus, close the wheel
 					animation.startClosing(() -> this.minecraft.player.closeContainer());
 				}

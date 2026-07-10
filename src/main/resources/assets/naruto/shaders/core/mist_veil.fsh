@@ -37,22 +37,64 @@ float layeredNoise(vec2 uv) {
 void main() {
     vec4 base = vertexColor * ColorModulator;
     float strength = clamp(MistStrength, 0.0, 1.0);
+
     vec2 screenSize = max(MistScreenSize, vec2(1.0));
     vec2 uv = screenPos / screenSize;
     vec2 centered = uv - vec2(0.5);
 
-    float fog = layeredNoise(uv + vec2(sin(MistTime * 0.035) * 0.04, cos(MistTime * 0.025) * 0.03));
-    float rollingBand = 0.5 + 0.5 * sin(uv.y * 12.0 + uv.x * 3.0 - MistTime * 0.32 + fog * 2.4);
-    float crossBand = 0.5 + 0.5 * sin(uv.x * 8.0 - MistTime * 0.18 + fog * 1.8);
+    float fog = layeredNoise(uv + vec2(
+        sin(MistTime * 0.035) * 0.04,
+        cos(MistTime * 0.025) * 0.03
+    ));
+
+    float rollingBand = 0.5 + 0.5 * sin(
+        uv.y * 12.0 +
+        uv.x * 3.0 -
+        MistTime * 0.32 +
+        fog * 2.4
+    );
+
+    float crossBand = 0.5 + 0.5 * sin(
+        uv.x * 8.0 -
+        MistTime * 0.18 +
+        fog * 1.8
+    );
+
     float edgeCloud = smoothstep(0.1, 0.82, length(centered));
-    float veil = clamp(fog * 0.62 + rollingBand * 0.25 + crossBand * 0.13 + edgeCloud * 0.16, 0.0, 1.0);
+
+    // Fake "close to player" fog.
+    // This makes fog stronger near the lower center of the screen.
+    float nearPlayerFog = smoothstep(1.0, 0.08, distance(uv, vec2(0.5, 0.82)));
+
+    // Extra low-screen fog, like mist around the player's body/feet.
+    float lowFog = smoothstep(0.35, 1.0, uv.y);
+
+    float veil = clamp(
+        fog * 0.48 +
+        rollingBand * 0.18 +
+        crossBand * 0.10 +
+        edgeCloud * 0.10 +
+        nearPlayerFog * 0.55 +
+        lowFog * 0.28,
+        0.0,
+        1.0
+    );
 
     vec3 paleBlue = vec3(0.58, 0.82, 1.0);
     vec3 pearl = vec3(0.93, 0.98, 1.0);
     vec3 greyMist = vec3(0.67, 0.78, 0.86);
-    vec3 color = mix(greyMist, mix(paleBlue, pearl, veil), 0.68 + rollingBand * 0.18);
-    color *= 0.78 + veil * 0.26;
 
-    float alpha = base.a * strength * (0.16 + veil * 0.34 + edgeCloud * 0.12);
-    fragColor = vec4(clamp(color, 0.0, 1.0), clamp(alpha, 0.0, 0.62));
+    vec3 color = mix(greyMist, mix(paleBlue, pearl, veil), 0.68 + rollingBand * 0.18);
+    color *= 0.82 + veil * 0.34;
+
+    float density = pow(veil, 0.68);
+
+    float alpha = base.a * strength * (
+        0.24 +
+        density * 0.50 +
+        nearPlayerFog * 0.45 +
+        lowFog * 0.16
+    );
+
+    fragColor = vec4(clamp(color, 0.0, 1.0), clamp(alpha, 0.0, 0.95));
 }

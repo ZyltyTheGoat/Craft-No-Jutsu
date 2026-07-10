@@ -7,6 +7,7 @@ import net.mcreator.naruto.network.NarutoModVariables;
 import net.mcreator.naruto.entity.ShinobiCloneEntity.CloneType;
 import net.mcreator.naruto.JutsuRegistry;
 import net.mcreator.naruto.JutsuData;
+import net.mcreator.naruto.DojutsuStateHelper;
 
 public class UseAbilityOnKeyPressedProcedure {
 	public static void execute(Entity entity) {
@@ -20,6 +21,12 @@ public class UseAbilityOnKeyPressedProcedure {
 		if (jutsuData == null)
 			return;
 		String activeJutsu = entity.getData(NarutoModVariables.PLAYER_VARIABLES).activeJutsu;
+		if (DojutsuStateHelper.isDojutsu(jutsuData)) {
+			NarutoModVariables.PlayerVariables vars = entity.getData(NarutoModVariables.PLAYER_VARIABLES);
+			vars.activeDojutsu = jutsuData.getNature();
+			vars.activeToggleJutsu = DojutsuStateHelper.ensureActive(vars.activeToggleJutsu, jutsuData.getNature());
+			vars.markSyncDirty();
+		}
 		if (entity instanceof Player player && !player.level().isClientSide()) {
 			int remaining = JutsuCooldowns.getRemainingTicks(player, activeJutsu);
 			if (remaining > 0) {
@@ -29,6 +36,15 @@ public class UseAbilityOnKeyPressedProcedure {
 			}
 		}
 		if ("water_prison".equals(activeJutsu) && WaterPrisonAbility.tryUse(entity, jutsuData)) {
+			return;
+		}
+		if ("body_flicker".equals(activeJutsu) && BodyFlickerAbility.tryUse(entity, jutsuData)) {
+			return;
+		}
+		if ("substitution".equals(activeJutsu) && SubstitutionAbility.tryPrime(entity, jutsuData)) {
+			return;
+		}
+		if ("wind_blade".equals(activeJutsu) && BladeOfWindAbility.tryUse(entity, jutsuData)) {
 			return;
 		}
 		if ("shadow_clone".equals(activeJutsu) && CloneJutsuAbility.tryUse(entity, jutsuData, CloneType.SHADOW, activeJutsu)) {

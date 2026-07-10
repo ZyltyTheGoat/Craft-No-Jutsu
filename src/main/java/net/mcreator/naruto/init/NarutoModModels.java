@@ -10,12 +10,14 @@ import net.neoforged.api.distmarker.Dist;
 
 import net.mcreator.naruto.client.model.ModelSubstitution;
 import net.mcreator.naruto.client.model.ModelProjectile;
+import net.mcreator.naruto.client.model.ModelGourd;
 
 @EventBusSubscriber(Dist.CLIENT)
 public class NarutoModModels {
 	@SubscribeEvent
 	public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
 		event.registerLayerDefinition(ModelProjectile.LAYER_LOCATION, ModelProjectile::createBodyLayer);
+		event.registerLayerDefinition(ModelGourd.LAYER_LOCATION, ModelGourd::createBodyLayer);
 		event.registerLayerDefinition(ModelSubstitution.LAYER_LOCATION, ModelSubstitution::createBodyLayer);
 	}
 }

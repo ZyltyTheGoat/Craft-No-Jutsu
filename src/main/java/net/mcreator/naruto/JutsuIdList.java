@@ -53,7 +53,7 @@ public final class JutsuIdList {
 		return String.join(",", ids);
 	}
 
-	private static String normalize(String csv) {
+	public static String normalize(String csv) {
 		return join(toSet(csv));
 	}
 }

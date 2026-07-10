@@ -4,6 +4,7 @@ import net.minecraft.world.entity.Entity;
 
 import net.mcreator.naruto.network.NarutoModVariables;
 import net.mcreator.naruto.entity.ShinobiCloneEntity.CloneType;
+import net.mcreator.naruto.entity.ElementalBulletEntity;
 import net.mcreator.naruto.JutsuRegistry;
 import net.mcreator.naruto.JutsuData;
 
@@ -29,13 +30,28 @@ public class UseAbilityOnKeyReleasedProcedure {
 			if ("phoenix_flower".equals(activeJutsu) && PhoenixFlowerAbility.tryRelease(entity, jutsuData)) {
 				return;
 			}
+			if ("water_bullet".equals(activeJutsu) && ElementalBulletAbility.tryRelease(entity, jutsuData, ElementalBulletEntity.ELEMENT_WATER, activeJutsu)) {
+				return;
+			}
+			if ("air_bullets".equals(activeJutsu) && ElementalBulletAbility.tryRelease(entity, jutsuData, ElementalBulletEntity.ELEMENT_WIND, activeJutsu)) {
+				return;
+			}
 			if ("chidori".equals(activeJutsu) && ChidoriAbility.tryRelease(entity, jutsuData)) {
 				return;
 			}
 			if ("earth_wall".equals(activeJutsu) && EarthWallAbility.tryRelease(entity, jutsuData)) {
 				return;
 			}
+			if ("earth_flow_spears".equals(activeJutsu) && EarthFlowSpearsAbility.tryRelease(entity, jutsuData)) {
+				return;
+			}
 			if ("great_breakthrough".equals(activeJutsu) && GreatBreakthroughAbility.tryRelease(entity, jutsuData)) {
+				return;
+			}
+			if ("vacuum_wave".equals(activeJutsu) && VacuumWaveAbility.tryRelease(entity, jutsuData)) {
+				return;
+			}
+			if ("severing_wave".equals(activeJutsu) && SeveringWaveAbility.tryRelease(entity, jutsuData)) {
 				return;
 			}
 			if ("shadow_clone".equals(activeJutsu) && CloneJutsuAbility.tryUse(entity, jutsuData, CloneType.SHADOW, activeJutsu)) {
@@ -51,6 +67,30 @@ public class UseAbilityOnKeyReleasedProcedure {
 				return;
 			}
 			if ("suicide_bombing_clone".equals(activeJutsu) && CloneJutsuAbility.tryUse(entity, jutsuData, CloneType.EXPLOSION, activeJutsu)) {
+				return;
+			}
+			if ("false_darkness".equals(activeJutsu) && FalseDarknessAbility.tryRelease(entity, jutsuData)) {
+				return;
+			}
+			if ("iron_sand_shower".equals(activeJutsu) && IronSandShowerAbility.tryRelease(entity, jutsuData)) {
+				return;
+			}
+			if ("iron_sand_gathering_assault".equals(activeJutsu) && IronSandGatheringAssaultAbility.tryRelease(entity, jutsuData)) {
+				return;
+			}
+			if ("needle_sphere".equals(activeJutsu) && NeedleSphereAbility.tryRelease(entity, jutsuData)) {
+				return;
+			}
+			if ("solid_fog_jutsu".equals(activeJutsu) && SolidFogJutsuAbility.tryRelease(entity, jutsuData)) {
+				return;
+			}
+			if ("sand_burial_prison".equals(activeJutsu) && SandBindingCoffinAbility.tryRelease(entity, jutsuData)) {
+				return;
+			}
+			if ("fire_dragon_bullet".equals(activeJutsu) && FireDragonBulletAbility.tryRelease(entity, jutsuData)) {
+				return;
+			}
+			if (("genjutsu".equals(activeJutsu) || "yin_genjutsu".equals(activeJutsu)) && GenjutsuAbility.tryRelease(entity, jutsuData, activeJutsu)) {
 				return;
 			}
 			clearCharge(entity);
