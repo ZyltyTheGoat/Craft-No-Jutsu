@@ -82,7 +82,7 @@ public abstract class GourdItem extends ArmorItem {
 
 	public static class Chestplate extends GourdItem {
 		public Chestplate() {
-			super(ArmorItem.Type.CHESTPLATE, new Item.Properties().stacksTo(1));
+			super(ArmorItem.Type.CHESTPLATE, new Item.Properties().durability(ArmorItem.Type.CHESTPLATE.getDurability(0)));
 		}
 
 		@Override
